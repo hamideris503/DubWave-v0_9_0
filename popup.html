@@ -1,0 +1,371 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DubWave</title>
+<style>
+  :root {
+    --bg: #0b0f19;
+    --surface: rgba(255, 255, 255, 0.04);
+    --surface-hover: rgba(255, 255, 255, 0.08);
+    --border: rgba(245, 166, 35, 0.15);
+    --border-subtle: rgba(255, 255, 255, 0.08);
+    --text: #f8fafc;
+    --text-muted: #8e9bae;
+    --brand-gold: #f5a623;
+    --brand-gold-bright: #ffc837;
+    --brand-gold-dark: #d97706;
+    --danger: #f43f5e;
+    --success: #10b981;
+    --rad-lg: 16px;
+    --rad-md: 10px;
+    --rad-sm: 6px;
+  }
+  * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Tahoma, sans-serif; }
+  
+  body {
+    margin: 0; width: 380px; height: 580px; overflow: hidden;
+    background: radial-gradient(circle at 50% -20%, #172033, var(--bg) 70%);
+    color: var(--text); display: flex; flex-direction: column; padding: 12px; gap: 10px;
+    font-size: 11px;
+  }
+  h1, h2, h3, p { margin: 0; }
+  button, select, input { font: inherit; outline: none; border: none; }
+  
+  /* --- هدر (Header) --- */
+  .top-bar { display: flex; align-items: center; justify-content: space-between; height: 44px; flex-shrink: 0; }
+  .brand-box { display: flex; align-items: center; gap: 10px; }
+  
+  /* لوگوی تطبیق‌یافته با آیکون */
+  .logo-svg { width: 38px; height: 38px; border-radius: 12px; box-shadow: 0 4px 14px rgba(245, 166, 35, 0.25); flex-shrink: 0; }
+  
+  .brand-info h1 { font-size: 16px; font-weight: 800; background: linear-gradient(90deg, #ffc837, #f5a623); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .brand-info .tagline { font-size: 9px; color: var(--text-muted); margin-top: 2px; }
+  .status-box { display: flex; align-items: center; gap: 6px; background: var(--surface); padding: 4px 8px; border-radius: var(--rad-md); border: 1px solid var(--border-subtle); }
+  .live-dot { width: 8px; height: 8px; border-radius: 50%; background: #475569; }
+  .live-dot.on { background: var(--success); box-shadow: 0 0 8px var(--success); animation: pulse 1.5s infinite; }
+  @keyframes pulse { 50% { opacity: 0.5; } }
+  #liveText { font-size: 9px; font-weight: bold; letter-spacing: 0.5px; }
+  #uiLang { background: transparent; color: var(--text); font-size: 9px; cursor: pointer; }
+  #uiLang option { background: var(--bg); }
+
+  /* --- دکمه اصلی شروع --- */
+  .hero-section { display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
+  #toggle { flex: 1; height: 44px; border-radius: var(--rad-lg); font-weight: bold; font-size: 13px; color: #0b0f19; cursor: pointer; transition: 0.2s; background: linear-gradient(135deg, var(--brand-gold-bright), var(--brand-gold)); box-shadow: 0 4px 16px rgba(245, 166, 35, 0.3); display: flex; align-items: center; justify-content: center; gap: 8px; }
+  #toggle:hover { filter: brightness(1.1); transform: translateY(-1px); }
+  #toggle.stop { color: #fff; background: linear-gradient(135deg, var(--danger), #be123c); box-shadow: 0 4px 16px rgba(244,63,94,0.3); }
+  .mic-icon { width: 44px; height: 44px; border-radius: var(--rad-lg); background: var(--surface); border: 1px solid var(--border-subtle); display: grid; place-items: center; font-size: 18px; }
+
+  /* --- تب‌ها --- */
+  .tab-bar { display: flex; background: rgba(0,0,0,0.4); padding: 3px; border-radius: 14px; border: 1px solid var(--border-subtle); flex-shrink: 0; }
+  .tab { flex: 1; height: 34px; border-radius: 10px; background: transparent; color: var(--text-muted); cursor: pointer; font-size: 10px; font-weight: 600; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px; }
+  .tab:hover { color: var(--text); background: var(--surface); }
+  .tab.active { background: rgba(245, 166, 35, 0.12); color: var(--brand-gold-bright); box-shadow: 0 2px 8px rgba(0,0,0,0.25); border: 1px solid rgba(245, 166, 35, 0.3); }
+  .tab-icon { width: 15px; height: 15px; fill: currentColor; flex-shrink: 0; opacity: 0.8; }
+  .tab.active .tab-icon { opacity: 1; fill: var(--brand-gold-bright); }
+
+  /* --- نگهدارنده تب‌ها --- */
+  .panes-wrapper { flex: 1; position: relative; min-height: 0; }
+  .pane { position: absolute; inset: 0; display: none; flex-direction: column; gap: 10px; }
+  .pane.active { display: flex; animation: slideUp 0.2s ease forwards; }
+  @keyframes slideUp { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+  /* --- کارت‌ها و کنترل‌ها --- */
+  .card { background: var(--surface); border: 1px solid var(--border-subtle); border-radius: var(--rad-lg); padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+  .row-item { display: flex; justify-content: space-between; align-items: center; min-height: 26px; }
+  .label { color: var(--text-muted); font-size: 10px; }
+  .select-box { background: rgba(0,0,0,0.4); border: 1px solid var(--border-subtle); border-radius: var(--rad-md); color: var(--text); padding: 6px 10px; width: 100%; font-size: 10px; cursor: pointer; }
+  .select-box:focus { border-color: var(--brand-gold); }
+  
+  /* --- دکمه‌های سوئیچ --- */
+  .switch { position: relative; width: 38px; height: 22px; display: inline-block; flex-shrink: 0; }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .track { position: absolute; cursor: pointer; inset: 0; background: #1e293b; border-radius: 20px; transition: 0.25s ease; border: 1px solid var(--border-subtle); }
+  .track:before {
+    content: ""; position: absolute; height: 16px; width: 16px;
+    right: 2px; bottom: 2px; background: #cbd5e1; border-radius: 50%;
+    transition: 0.25s ease; box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+  }
+  .switch input:checked + .track { background: var(--brand-gold); border-color: var(--brand-gold); }
+  .switch input:checked + .track:before { transform: translateX(-16px); background: #0b0f19; }
+
+  /* دکمه‌های عملیاتی */
+  .btn-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .preset-btn { background: rgba(0,0,0,0.2); border: 1px solid var(--border-subtle); color: var(--text-muted); border-radius: var(--rad-md); padding: 8px 4px; font-size: 9px; cursor: pointer; transition: 0.2s; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .preset-btn:hover { background: var(--surface); color: var(--text); }
+  .preset-btn.active { background: rgba(245, 166, 35, 0.15); border-color: rgba(245, 166, 35, 0.4); color: #fff; }
+  .preset-btn b { font-size: 14px; }
+  .action-row { display: flex; gap: 8px; margin-top: auto; }
+  .btn-sub { flex: 1; background: var(--surface); border: 1px solid var(--border-subtle); color: var(--text); padding: 8px; border-radius: var(--rad-md); font-weight: bold; font-size: 10px; cursor: pointer; transition: 0.2s; text-align: center; }
+  .btn-sub:hover { background: var(--surface-hover); border-color: var(--border); }
+  .btn-danger { color: #fca5a5; border-color: rgba(244,63,94,0.3); background: rgba(244,63,94,0.1); }
+  .btn-danger:hover { background: rgba(244,63,94,0.2); }
+
+  /* اسلایدرها */
+  .slider-group { display: flex; flex-direction: column; gap: 6px; margin: 4px 0; }
+  .slider-header { display: flex; justify-content: space-between; font-size: 9px; color: var(--text-muted); }
+  .slider-header b { color: var(--brand-gold-bright); font-size: 10px; }
+  .range { -webkit-appearance: none; width: 100%; height: 4px; border-radius: 4px; background: #1e293b; outline: none; }
+  .range::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: var(--brand-gold); cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.4); transition: transform 0.15s; }
+  .range::-webkit-slider-thumb:hover { transform: scale(1.2); }
+  .range.fill { background: linear-gradient(to left, var(--brand-gold-bright), var(--brand-gold-dark)) right top no-repeat, #1e293b; background-size: var(--p, 50%) 100%, 100% 100%; }
+
+  /* --- تب کلیدها --- */
+  .guide-box { background: rgba(245, 166, 35, 0.05); border: 1px solid rgba(245, 166, 35, 0.2); border-radius: var(--rad-md); padding: 8px; font-size: 9.5px; color: #cbd5e1; line-height: 1.5; }
+  .guide-box a { color: var(--brand-gold-bright); text-decoration: none; font-weight: bold; }
+  .input-group { display: flex; gap: 6px; }
+  .input-group input { flex: 1; background: rgba(0,0,0,0.4); border: 1px solid var(--border-subtle); border-radius: var(--rad-md); color: #fff; padding: 0 8px; font-family: monospace; font-size: 10px; direction: ltr; min-width: 0; }
+  .input-group input:focus { border-color: var(--brand-gold); }
+  .input-group button { background: var(--surface); border: 1px solid var(--border-subtle); color: var(--text); border-radius: var(--rad-md); padding: 6px 10px; font-size: 9px; font-weight: bold; cursor: pointer; }
+  .key-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; padding-left: 2px; scrollbar-width: thin; scrollbar-color: rgba(245, 166, 35, 0.4) transparent; }
+  .key-list::-webkit-scrollbar { width: 4px; }
+  .key-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+  .key-item { background: var(--surface); border: 1px solid var(--border-subtle); border-radius: var(--rad-md); padding: 6px 8px; display: flex; justify-content: space-between; align-items: center; font-size: 10px; }
+  .key-item code { font-family: monospace; color: var(--brand-gold-bright); }
+  .key-badge { font-size: 8px; padding: 2px 6px; border-radius: 12px; background: rgba(255,255,255,0.1); }
+  .activeKey { background: rgba(16,185,129,0.15); color: #6ee7b7; border: 1px solid rgba(16,185,129,0.3); }
+  #keyMsg { font-size: 9px; color: var(--brand-gold-bright); text-align: center; height: 12px; margin: -2px 0; }
+
+  /* --- تب زیرنویس‌ها --- */
+  .subs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 12px; padding: 10px !important; }
+  .subs-preview-area { display: flex; gap: 8px; flex: 1; min-height: 0; }
+  .pos-controls { width: 85px; display: flex; flex-direction: column; gap: 6px; justify-content: space-between; }
+  .pos-btn { flex: 1; background: var(--surface); border: 1px solid var(--border-subtle); color: var(--text-muted); border-radius: var(--rad-md); font-size: 9px; cursor: pointer; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 2px; transition: 0.2s; }
+  .pos-btn.active { background: rgba(245, 166, 35, 0.15); border-color: var(--brand-gold); color: #fff; font-weight: bold; }
+  .preview-frame { flex: 1; background: linear-gradient(135deg, #0f172a, #0b0f19); border-radius: var(--rad-md); border: 1px solid var(--border-subtle); position: relative; overflow: hidden; box-shadow: inset 0 0 20px rgba(0,0,0,0.6); }
+  .sub-glass { position: absolute; left: 50%; max-width: 90%; transform: translateX(-50%); padding: 4px 10px; background: rgba(0,0,0,0.6); border: 1px solid rgba(245, 166, 35, 0.3); border-radius: 6px; font-weight: bold; text-align: center; transition: all 0.2s; white-space: nowrap; font-size: 11px; color: #fff; }
+  .preview-frame[data-pos="top"] .sub-glass { top: 8px; }
+  .preview-frame[data-pos="center"] .sub-glass { top: 50%; transform: translate(-50%, -50%); }
+  .preview-frame[data-pos="bottom"] .sub-glass { bottom: 8px; }
+
+  .section-title { font-size: 11px; font-weight: 800; color: #e2e8f0; display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px; }
+  .pill-badge { background: rgba(245, 166, 35, 0.15); color: var(--brand-gold-bright); padding: 2px 6px; border-radius: 12px; font-size: 8px; border: 1px solid rgba(245, 166, 35, 0.3); }
+  .hidden { display: none !important; }
+  /* switch knob direction for LTR UI languages */
+  html[dir="ltr"] .track:before { right: auto; left: 2px; }
+  html[dir="ltr"] .switch input:checked + .track:before { transform: translateX(16px); }
+  /* audio tab can scroll: it now holds the advanced options too */
+  #pane-audio { overflow-y: auto; scrollbar-width: thin; scrollbar-color: rgba(245,166,35,.4) transparent; padding-inline-end: 2px; }
+  #pane-audio > * { flex-shrink: 0; }
+  .mini-input { background: rgba(0,0,0,.4); border: 1px solid var(--border-subtle); border-radius: var(--rad-md); color: #fff; padding: 6px 8px; font-family: monospace; font-size: 9px; direction: ltr; width: 100%; }
+  .mini-input:focus { border-color: var(--brand-gold); }
+  .mini-select { background: rgba(0,0,0,.4); border: 1px solid var(--border-subtle); border-radius: var(--rad-md); color: var(--text); padding: 4px 8px; font-size: 10px; cursor: pointer; }
+</style>
+</head>
+<body>
+  
+  <!-- 1. هدر اصلی (منطبق با آیکون) -->
+  <div class="top-bar">
+    <div class="brand-box">
+      <svg class="logo-svg" viewBox="0 0 128 128">
+        <rect x="0" y="0" width="128" height="128" rx="32" fill="#0b0f19" />
+        <path d="M 36 28 L 68 28 C 92 28 108 44 108 64 C 108 84 92 100 68 100 L 36 100 Z M 44 36 L 44 92 L 68 92 C 86 92 100 78 100 64 C 100 50 86 36 68 36 Z" fill="#f5a623" />
+        <rect x="56" y="52" width="5" height="24" rx="2.5" fill="#f5a623" />
+        <rect x="66" y="44" width="5" height="40" rx="2.5" fill="#f5a623" />
+        <rect x="76" y="54" width="5" height="20" rx="2.5" fill="#f5a623" />
+      </svg>
+      <div class="brand-info">
+        <h1>DubWave <span style="font-size: 8px; color: var(--text-muted); font-weight: normal; margin-inline-start: 2px;">0.9.0</span></h1>
+        <div class="tagline" data-i="tagline">دوبله زنده تب با Gemini</div>
+      </div>
+    </div>
+    <div class="status-box">
+      <div class="live-dot" id="dot"></div>
+      <span id="liveText">OFF</span>
+      <select id="uiLang" aria-label="UI language"></select>
+    </div>
+  </div>
+
+  <!-- 2. دکمه اصلی و وضعیت -->
+  <div class="hero-section">
+    <button id="toggle">▶ <span data-i="start">شروع دوبله</span></button>
+    <div class="mic-icon">🎙️</div>
+  </div>
+  <div id="status" style="text-align: center; font-size: 9.5px; color: var(--brand-gold-bright); height: 14px; margin-top: -2px;"></div>
+
+  <!-- 3. تب‌ها -->
+  <div class="tab-bar">
+    <button class="tab active" data-tab="main">
+      <svg class="tab-icon" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+      <span data-i="tabMain">اصلی</span>
+    </button>
+    <button class="tab" data-tab="keys">
+      <svg class="tab-icon" viewBox="0 0 24 24"><path d="M12.65 10C11.83 7.67 9.61 6 7 6c-3.31 0-6 2.69-6 6s2.69 6 6 6c2.61 0 4.83-1.67 5.65-4H17v2h2v-2h2v-2H12.65zM7 14c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/></svg>
+      <span data-i="tabKeys">کلیدها</span>
+    </button>
+    <button class="tab" data-tab="audio">
+      <svg class="tab-icon" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+      <span data-i="tabAudio">صدا</span>
+    </button>
+    <button class="tab" data-tab="subs">
+      <svg class="tab-icon" viewBox="0 0 24 24"><path d="M19 4H5c-1.11 0-2 .9-2 2v12c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-8 7H9.5v-.5h-2v3h2V13H11v1c0 .55-.45 1-1 1H7c-.55 0-1-.45-1-1v-4c0-.55.45-1 1-1h3c.55 0 1 .45 1 1v1zm7 0h-1.5v-.5h-2v3h2V13H18v1c0 .55-.45 1-1 1h-3c-.55 0-1-.45-1-1v-4c0-.55.45-1 1-1h3c.55 0 1 .45 1 1v1z"/></svg>
+      <span data-i="tabSubs">زیرنویس</span>
+    </button>
+  </div>
+
+  <!-- 4. محتوای تب‌ها -->
+  <div class="panes-wrapper">
+    
+    <!-- تب اصلی -->
+    <div class="pane active" id="pane-main">
+      <div class="card">
+        <div class="row-item">
+          <span class="label" data-i="dubLang">زبان دوبله</span>
+          <div style="width: 140px;">
+            <select id="lang" class="select-box">
+              <option value="fa">فارسی</option>
+              <option value="en">English</option>
+              <option value="de">Deutsch</option>
+              <option value="ar">العربية</option>
+              <option value="tr">Türkçe</option>
+              <option value="fr">Français</option>
+              <option value="es">Español</option>
+              <option value="it">Italiano</option>
+              <option value="ru">Русский</option>
+              <option value="ja">日本語</option>
+              <option value="ko">한국어</option>
+              <option value="zh-Hans">中文</option>
+              <option value="hi">हिन्दी</option>
+              <option value="uk">Українська</option>
+              <option value="pt-BR">Português (BR)</option>
+            </select>
+          </div>
+        </div>
+        <div class="row-item" style="margin-top: 4px;">
+          <span class="label" data-i="autoMute">کاهش صدای اصلی بعد از شروع دوبله</span>
+          <label class="switch"><input type="checkbox" id="autoMute"><span class="track"></span></label>
+        </div>
+      </div>
+      
+      <div class="section-title"><span data-i="quickAudio">پروفایل‌های سریع صدا</span></div>
+      <div class="btn-grid">
+        <button class="preset-btn" data-preset="dubonly"><b>🔇</b><span data-i="presetDub">فقط دوبله</span></button>
+        <button class="preset-btn" data-preset="doc"><b>🎬</b><span data-i="presetDoc">مستند</span></button>
+        <button class="preset-btn" data-preset="balanced"><b>⚖️</b><span data-i="presetBal">متعادل</span></button>
+      </div>
+
+      <div class="action-row">
+        <button class="btn-sub" id="reconnect">↻ <span data-i="reconnect">اتصال مجدد</span></button>
+        <button class="btn-sub" id="exportSrt">⬇ <span data-i="exportSrt">ذخیره زیرنویس</span></button>
+        <button class="btn-sub btn-danger" id="stop2">■ <span data-i="stop">توقف</span></button>
+      </div>
+    </div>
+
+    <!-- تب کلیدها -->
+    <div class="pane" id="pane-keys">
+      <div class="section-title">
+        <span>🔑 <span data-i="keysTitle">کلید API جمنای</span></span>
+        <div><span class="pill-badge">🔒 <span data-i="keysSaved">ذخیره‌شده</span></span> <small id="keyCount"></small></div>
+      </div>
+      
+      <div class="guide-box">
+        <div style="margin-bottom: 4px;">۱. <span data-i="keyStep1"></span> <a id="getKey" href="https://aistudio.google.com/apikey" target="_blank"><span id="getKeyTxt"></span> ↗</a></div>
+        <div>۲. <span data-i="keyStep2"></span></div>
+      </div>
+
+      <div class="input-group">
+        <input id="keyInput" type="password" autocomplete="off" spellcheck="false">
+        <button id="toggleKey" type="button"></button>
+        <button id="addBtn" type="button" style="background: var(--brand-gold); color: #0b0f19; border-color: var(--brand-gold); font-weight: bold;"></button>
+      </div>
+      <div id="keyMsg"></div>
+
+      <div id="keyList" class="key-list"></div>
+
+      <div class="action-row" style="flex-shrink: 0;">
+        <button class="btn-sub" id="checkKeys">✓ <span data-i="checkKeys">بررسی کلیدها</span></button>
+        <button class="btn-sub btn-danger hidden" id="delAll" data-i="deleteAll"></button>
+      </div>
+    </div>
+
+    <!-- تب صدا -->
+    <div class="pane" id="pane-audio">
+      <div class="section-title">🔊 <span data-i="audioTitle">تنظیمات صوتی</span></div>
+      <div class="card" style="gap: 12px; padding: 12px 14px;">
+        <div class="slider-group">
+          <div class="slider-header"><span data-i="volBefore"></span><b id="v1"></b></div>
+          <input class="range" id="origBefore" type="range" min="0" max="1" step="0.05">
+        </div>
+        <div class="slider-group">
+          <div class="slider-header"><span data-i="volAfter"></span><b id="v2"></b></div>
+          <input class="range" id="origAfter" type="range" min="0" max="1" step="0.05">
+        </div>
+        <div class="slider-group">
+          <div class="slider-header"><span data-i="volDub"></span><b id="v3"></b></div>
+          <input class="range" id="dubVol" type="range" min="0" max="1.5" step="0.05">
+        </div>
+      </div>
+      <div style="text-align: center; font-size: 9px; color: var(--text-muted);" data-i="audioHint"></div>
+
+      <div class="section-title">⚙️ <span data-i="advTitle">گزینه‌های پیشرفته</span></div>
+      <div class="card" style="padding: 8px 12px; gap: 2px;">
+        <div class="row-item"><span class="label" data-i="optSync">همگام‌سازی با Pause و Seek</span>
+          <label class="switch"><input type="checkbox" id="syncPlayback"><span class="track"></span></label></div>
+        <div class="row-item"><span class="label" data-i="optLag">جبران تأخیر با کند کردن ویدئو (آزمایشی)</span>
+          <label class="switch"><input type="checkbox" id="lagComp"><span class="track"></span></label></div>
+        <div class="row-item"><span class="label" data-i="optRotate">چرخش بین کلیدها</span>
+          <label class="switch"><input type="checkbox" id="rotate"><span class="track"></span></label></div>
+        <div class="row-item"><span class="label" data-i="optAutoStop">توقف خودکار در سکوت</span>
+          <select id="autoStopMin" class="mini-select">
+            <option value="0" data-i="asOff">خاموش</option>
+            <option value="3" data-i="as3">۳ دقیقه</option>
+            <option value="5" data-i="as5">۵ دقیقه</option>
+            <option value="10" data-i="as10">۱۰ دقیقه</option>
+            <option value="20" data-i="as20">۲۰ دقیقه</option>
+          </select></div>
+        <div class="row-item" style="flex-direction: column; align-items: stretch; gap: 4px; padding-top: 4px;">
+          <span class="label" data-i="optModel">مدل Gemini (پیشرفته)</span>
+          <input id="model" class="mini-input" type="text" spellcheck="false" autocomplete="off">
+        </div>
+      </div>
+    </div>
+
+    <!-- تب زیرنویس -->
+    <div class="pane" id="pane-subs">
+      <div class="section-title">▣ <span data-i="subsTitle">تنظیمات زیرنویس</span></div>
+      
+      <div class="card subs-grid">
+        <div class="row-item">
+          <span class="label" data-i="subsShow">نمایش روی ویدئو</span>
+          <label class="switch"><input type="checkbox" id="subsOn"><span class="track"></span></label>
+        </div>
+        <div class="row-item">
+          <span class="label" data-i="subsOrig">نمایش متن اصلی هم</span>
+          <label class="switch"><input type="checkbox" id="subsOrig"><span class="track"></span></label>
+        </div>
+        <div class="row-item" style="grid-column: span 2;">
+          <span class="label" data-i="subsGlass">پس‌زمینه شیشه‌ای</span>
+          <label class="switch"><input type="checkbox" id="subsGlass"><span class="track"></span></label>
+        </div>
+        
+        <div class="slider-group">
+          <div class="slider-header"><span data-i="subsSize">اندازه</span><b id="v4"></b></div>
+          <input class="range fill" id="subsSize" type="range" min="16" max="48" step="1">
+        </div>
+        <div class="slider-group">
+          <div class="slider-header"><span data-i="subsOpacity">شفافیت</span><b id="v5"></b></div>
+          <input class="range fill" id="subsOpacity" type="range" min="0" max="1" step="0.05">
+        </div>
+      </div>
+
+      <div class="subs-preview-area">
+        <div class="pos-controls" id="posSeg">
+          <input id="subsPos" type="hidden" value="bottom">
+          <button type="button" class="pos-btn" data-pos="top">⇧ <span data-i="posTop"></span></button>
+          <button type="button" class="pos-btn" data-pos="center">⇦ <span data-i="posCenter"></span></button>
+          <button type="button" class="pos-btn" data-pos="bottom">⇩ <span data-i="posBottom"></span></button>
+        </div>
+        <div class="preview-frame" id="pvFrame" data-pos="bottom">
+          <div class="sub-glass" id="subPreviewText" data-i="subsSample"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  
+  <script src="common.js"></script>
+  <script src="i18n.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>
